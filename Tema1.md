@@ -304,4 +304,258 @@ amigos la determina la zona donde está definida en la clase a la que pertenece)
 Las funciones amigas violan el principio de encapsulamiento de la programación orientada
 a objetos, pero es la clase la que decide quiénes son sus amigos.
 
+```cpp
+#include <iostream>
+using namespace std;
+class Punto; //declaracion anticipada para que
+class General {
+int n;
+public:
+void inc(Punto p, int x); //no de error aqui
+void pinta() const { cout <<"(" << n << ")\n"; }
+};
+class Punto {
+friend Punto suma(Punto p1, const Punto &p2);
+friend void General::inc(Punto p, int x);
+private:
+int x, y;
+public:
+Punto( int nx=0, int ny=0 ){ x=nx; y=ny; }
+void pinta() const {cout <<"("<< x <<","<< y << ")\n"; }
+};
+//inc hay que definirlo aquí tras definir Punto
+void General::inc(Punto p, int x) {
+n=p.x+x; //Acceso a atributos privados de p!!
+};
+Punto suma(Punto p1, const Punto &p2 ) {
+Punto res;
+res.x = p1.x + p2.x; //Acceso atributos privados!!
+res.y = p1.y + p2.y;
+return res;
+}
+int main(int argc, char *argv[]) {
+Punto p1(10,5), p2(20,10), p3 = suma(p1, p2);
+General g;
+p3.pinta();
+g.inc(p3, 2);
+g.pinta();
+system("PAUSE");
+return EXIT_SUCCESS;
+}
+```
+Las funciones amigas no son estrictamente necesarias (todo lo que se puede conseguir
+con funciones amigas se puede conseguir con funciones no amigas que utilicen la interfaz
+pública de la clase). Su uso se justifica sólo por razones de eficiencia
 
+Con funciones amigas
+```cpp
+9
+ Las funciones amigas no son estrictamente necesarias (todo lo que se puede conseguir
+con funciones amigas se puede conseguir con funciones no amigas que utilicen la interfaz
+pública de la clase). Su uso se justifica sólo por razones de eficiencia
+Con funciones amigas Sin funciones amigas
+#include <iostream>
+using namespace std;
+class Punto; //declaracion anticipada para que
+class General {
+int n;
+public:
+void inc(Punto p, int x); //no de error
+void pinta() const { cout << n << endl; }
+};
+class Punto {
+friend Punto suma(Punto p1, const Punto &p2);
+friend void General::inc(Punto p, int x);
+private:
+int x, y;
+public:
+Punto(int nx=0, int ny=0) {x=nx; y=ny;}
+void pinta() const { cout << "(" << x << ","
+<< y << ")\n"; }
+};
+//inc hay que definirlo tras definir Punto
+void General::inc(Punto p, int x) {
+n=p.x+x; //Acceso a parte privada de p!!
+};
+Punto suma(Punto p1, const Punto &p2 ) {
+Punto res;
+res.x = p1.x + p2.x; //acceso a
+res.y = p1.y + p2.y; //parte privada
+return res;
+}
+int main(int argc, char *argv[]) {
+Punto p1(10,5), p2(20,10);
+Punto p3 = suma(p1, p2);
+General g;
+p3.pinta();
+g.inc(p3, 2);
+g.pinta();
+system("PAUSE");
+return EXIT_SUCCESS;
+}
+```
+
+Sin funciones amigas
+```cpp
+#include <iostream>
+using namespace std;
+class Punto {
+private:
+int x, y;
+public:
+Punto(int nx=0, int ny=0) { x=nx; y=ny; }
+void pinta() const { cout << "(" << x << ","
+<< y << ")\n"; }
+int getx() const { return x; }
+int gety() const { return y; }
+};
+class General {
+int n;
+public:
+void inc(Punto p, int x) { n=p.getx()+x; }
+void pinta() const { cout << n << endl; }
+};
+Punto suma(Punto p1, const Punto &p2 ) {
+Punto res(p1.getx() + p2.getx(),
+p1.gety() + p2.gety());
+return res;
+}
+int main(int argc, char *argv[]) {
+Punto p1(10,5), p2(20,10);
+Punto p3 = suma(p1, p2);
+General g;
+p3.pinta();
+g.inc(p3, 2);
+g.pinta();
+system("PAUSE");
+return EXIT_SUCCESS;
+}
+```
+
+### Clases amigas (friend)
+Una clase puede declararse como amiga de otra/s clase/s.
+
+Cuando una clase A se declara amiga de otra B, todos los métodos de la clase A pasan a
+ser amigos de la clase B
+
+Es la forma más rápida de declarar todos los métodos de una clase como amigos de otra.
+
+```cpp
+class Cualquiera {
+. . .
+friend class Amiga;
+};
+```
+
+Los métodos de la clase **Amiga** pueden acceder a la parte privada de los objetos de la clase
+**Cualquiera** pasados como parámetros, **pero no al revés**.
+
+```cpp
+#include <iostream>
+using namespace std;
+class Punto {
+friend class General; //clase amiga
+private:
+int x, y;
+public:
+Punto( int nx=0, int ny=0 ){ x=nx; y=ny; }
+void pinta() const {cout <<"("<< x <<","<< y << ")\n";}
+};
+class General {
+int n;
+public:
+void ponACero(Punto &p) {
+p.x = 0; //Acceso a parte privada de Punto
+p.y = 0;
+n = 0;
+}
+void inc(Punto p, int x) {
+n = p.x + x; //Acceso a parte privada de Punto
+}
+void pinta() const { cout << n << endl; }
+};
+int main(int argc, char *argv[]) {
+Punto p1(10,5);
+General g;
+p1.pinta();
+g.ponACero(p1);
+p1.pinta();
+g.pinta();
+g.inc(p1, -2);
+g.pinta();
+system("PAUSE");
+return EXIT_SUCCESS;
+}
+```
+
+### Clases amigas (friend) (caso de referencia cruzada)
+Si se quiere que dos clases tengan acceso mutuo a los miembros privados de los objetos
+de la otra clase pasados como parámetro, cada una debe declararse amiga de la otra.
+
+**Problema**: no podemos utilizar una clase antes de declararla.
+
+**Solución: declarar anticipadamente** (redirigir la declaración de) **la clase que definimos
+en segundo lugar**.
+
+**Cuando se redirige una clase, se pueden declarar variables de ese tipo y punteros.**
+Básicamente, podemos declarar los prototipos, pero como aún no se han declarado los
+atributos y métodos reales de la clase redirigida, no se pueden invocar. La solución es
+sólo hacer las declaraciones primero y luego definir los métodos.
+
+```cpp
+#include <iostream>
+using namespace std;
+class Amiga2; // declaración anticipada
+class Amiga1 {
+friend class Amiga2;
+friend int suma(Amiga1 a1, Amiga2 a2);
+private:
+int privada;
+public:
+void modificaAmiga2(Amiga2 &a2, int val) const;
+/* Aquí no podemos definir el método porque aún
+el compilador no ha llegado a leer la definición de
+la clase Amiga2 y no sabe que atributos tiene... */
+void pinta() const { cout << privada << "\n"; }
+};
+class Amiga2 {
+friend class Amiga1;
+friend int suma(Amiga1 a1, Amiga2 a2);
+private:
+int privada;
+public:
+void modificaAmiga1(Amiga1 &a1, int val) const {
+/* Aquí si podemos porque ya hemos declarado Amiga1 */
+a1.privada = val;
+}
+void pinta() const { cout << privada << "\n"; }
+};
+int suma(Amiga1 a1, Amiga2 a2 ) {
+return (a1.privada+a2.privada);
+}
+/* Ahora sí que podemos definir el método porque ya
+hemos declarado los atributos de la clase Amiga2 */
+void Amiga1::modificaAmiga2(Amiga2 &a2, int val) const {
+a2.privada = val;
+}
+int main(int argc, char *argv[]) {
+Amiga1 am1;
+Amiga2 am2;
+am1.modificaAmiga2(am2,10);
+am2.modificaAmiga1(am1,20);
+am1.pinta(); am2.pinta();
+cout << "suma = " << suma(am1, am2) << "\n";
+system("PAUSE"); return EXIT_SUCCESS;
+}
+```
+
+## 4. Parámetros por Valor y por Referencia
+Los parámetros son los valores que se le pasan a la función o método al ser llamada.
+Cada parámetro se comporta dentro de la función o método como una variable local.
+
+Los parámetros escritos en la llamada a la función se llaman parámetros reales o argumentos.
+
+Los que aparecen en la descripción de la función se llaman parámetros formales.
+
+Los parámetros formales son sustituidos por los reales (argumentos) en el orden de
+llamada. Al emparejarse éstos deben coincidir en número y en tipo.
