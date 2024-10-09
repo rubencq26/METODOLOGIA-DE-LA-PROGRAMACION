@@ -81,7 +81,11 @@ system("Pause"); return 0;
 ```
 
 Salida del Programa:
+
 A 2 X.a 0
+
 A 1 X.a 5 a 6 x.a 2
+
 A 1 X.a 5
+
 A 3 X.a 3 a 1
