@@ -347,13 +347,12 @@ Las funciones amigas no son estrictamente necesarias (todo lo que se puede conse
 con funciones amigas se puede conseguir con funciones no amigas que utilicen la interfaz
 pública de la clase). Su uso se justifica sólo por razones de eficiencia
 
-Con funciones amigas
-```cpp
-9
- Las funciones amigas no son estrictamente necesarias (todo lo que se puede conseguir
+
+Las funciones amigas no son estrictamente necesarias (todo lo que se puede conseguir
 con funciones amigas se puede conseguir con funciones no amigas que utilicen la interfaz
 pública de la clase). Su uso se justifica sólo por razones de eficiencia
 Con funciones amigas Sin funciones amigas
+```cpp
 #include <iostream>
 using namespace std;
 class Punto; //declaracion anticipada para que
