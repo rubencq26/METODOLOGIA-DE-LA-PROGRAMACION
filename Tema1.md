@@ -558,3 +558,297 @@ Los que aparecen en la descripción de la función se llaman parámetros formale
 
 Los parámetros formales son sustituidos por los reales (argumentos) en el orden de
 llamada. Al emparejarse éstos deben coincidir en número y en tipo.
+
+### 4.1 Parámetros por Valor y por Referencia
+Parametos **por valor o copia**:
+- Los cambios producidos dentro de la
+función no afectan a la variable usada
+como argumento en la llamada
+- En la llamada se pasa el valor (copia) de
+la variable usada como argumento.
+- El parámetro real puede ser una
+constante, variable o una expresión.
+
+Parámetros **por referencia**: 
+- Los cambios producidos dentro de la
+función afectan a la variable con la que
+se realiza la llamada.
+- En la llamada se transfiere la propia variable.
+- El parámetro real sólo puede ser una
+variable, ya que se transfiere ésta.
+- Se indica poniendo el carácter & delante del
+nombre del parámetro formal.
+
+```cpp
+#include <iostream>
+using namespace std;
+class obj; //declaracion anticipada
+void permutar(obj &a, obj &b); //ref
+void cambiamal(obj a, obj b); //valor
+class obj {
+int n;
+public:
+int get() const { return n; }
+void set(int i) { n = i; }
+};
+void permutar(obj &a, obj &b) {
+ cout << "dir. memoria de a: " << &a << endl;
+ cout << "dir. memoria de b: " << &b << endl;
+ int aux=a.get();
+ a.set(b.get());
+ b.set(aux);
+}
+void cambiamal(obj a, obj b) {
+ cout << "dir. memoria de a: " << &a << endl;
+cout << "dir. memoria de b: " << &b << endl;
+ int aux=a.get();
+ a.set(b.get());
+ b.set(aux);
+}
+
+int main(){
+obj x, y;
+x.set(5); y.set(7);
+cout << "dir. memoria de x: " << &x << endl;
+cout << "dir. memoria de y: " << &y << endl;
+cambiamal(x, y);
+cout << "x: " << x.get()
+ << " y: " << y.get() << endl;
+permutar(x, y);
+cout << "x: " << x.get()
+ << " y: " << y.get() << endl;
+system("Pause"); return 0;
+
+/*Como podemos observar en el main() imprimimos la dirección de memoria del objeto x (0x61fe0c) y del objeto y (0x61fe08)
+En cambiamal pasamos los parámetros por copia: a (0x61fde0) es una copia de x (0x61fe0c) y b (0x61fde8) es una copia de y (0x61fe08)
+Por eso sus direcciones de memoria son distintas.
+En permutar pasamos los parámetros por referencia: la dirección de memoria de a y x es la misma (0x61fe0c) ya que no pasamos una
+copia, sino el original. Lo mismo ocurre con con b e y.*/
+```
+
+Salida del programa:
+```yalm
+dir. memoria de x: 0x61fe0c
+dir. memoria de y: 0x61fe08
+dir. memoria de a: 0x61fde0
+dir. memoria de b: 0x61fde8
+x: 5 y: 7
+dir. memoria de a: 0x61fe0c
+dir. memoria de b: 0x61fe08
+x: 7 y: 5
+```
+### 4.2 Variables de tipo por Referencia
+Es un alias o sinónimo de una variable (no ocupa memoria ya que no crea una nueva variable)
+
+Se declaran con el operador & y deben ser inicializadas a otra variable
+```cpp
+int i=2;
+int& jref; //declaración no válida
+int& iref = i; //declaración válida
+iref = 6; //es lo mismo que poner i=6
+```
+Una función o método puede retornar una variable tipo referencia
+```cpp
+int& maxref(int& a, int& b) {
+if (a >= b) return a;
+else return b; //con & devuelve b, no una copia de b
+} //sin & devuelve una copia de b, no b
+```
+
+Al devolver una referencia, la llamada a la función o método puede estar a la izquierda del
+operador de asignación:
+
+```cpp
+maxref(i, j) = 0; // asigna un 0 al parametro mayor
+```
+
+Peligro al retornar referencias: el retorno puede estar indefinido si no programamos bien
+```cpp
+int& malprogramado(int n) {
+return n; //retorna n que al ser local es destruido al terminar
+}
+```
+
+### 4.3 Referencias constantes
+Cuando la variable que queremos pasar como parámetro por valor a una función o
+método ocupa mucha memoria, se suele pasar por referencia por motivos de eficiencia,
+ya que al pasarlo por valor el compilador tiene que realizar una copia del parámetro y al
+pasarlo por referencia, mediante un puntero o un alias (referencia), no se pierde tiempo ni
+memoria en hacer una copia, sino que se pasa directamente el original.
+
+Para evitar que accidentalmente se modifique el parámetro (al ser pasada por referencia, en
+vez de por valor) dentro de la función, es conveniente declarar el parámetro constante (const).
+
+- El especificador **const** se puede utilizar tanto con variables (y referencias) como con
+punteros (no confundir punteros constantes con punteros a constantes).
+- Una **variable const, una referencia const o un puntero a una variable const** no
+pueden cambiar el valor durante la ejecución del programa (**sólo puede ser inicializado**).
+- Un **objeto const, referencia const o puntero a objeto const** sólo puede invocar métodos
+const y no puede cambiar durante la ejecución del programa (**sólo puede ser inicializado**)
+
+**Recuerda:**
+- Si por motivos de eficiencia, en vez de pasar un objeto por valor lo pasamos por
+referencia (para evitar que el compilador tenga que realizar una copia del parámetro)
+por motivos de seguridad, para evitar que el parámetro pueda ser modificado (cuando
+se pasa por valor no importa ya que es una copia) la referencia la declaramos constante
+debemos etiquetar como constantes aquellos métodos que lo sean, ya que si no, no
+podrán ser invocados por el parámetro por referencia contante
+
+**Diferencia entre Referencias constantes**, Punteros constantes y Punteros a constantes
+Las **variables y las referencias pueden ser constantes**.
+Los punteros pueden ser constantes o apuntar a variables contantes (no es lo mismo).
+- Las variables const y las referencias const no puede cambiar su valor.
+- Los punteros const pueden cambiar el valor de la variable a la que apuntan, lo que no
+pueden es apuntar a un sitio diferente.
+- Los punteros a variables const no pueden cambiar el valor de la variable a la que
+apuntan, pero pueden apuntar a variables distintas a lo largo de la ejecución del programa.
+
+```cpp
+#include <iostream>
+using namespace std;
+int main() {
+ int x, y;
+ int *z; //z es un puntero a un entero
+ z=&x; *z=6; //z puede apuntar a un sitio y modificar su contenido
+ z=&y; *z=7; //y luego apuntar a otro sitio y modificar su contenido
+ cout << x << " " << y << " " << *z << endl;
+ const int *a; //a es un puntero a una constante entera
+ a=&x; //a puede apuntar a un sitio
+ a=&y; //y luego apuntar a otro sitio
+//*a=6; //ERROR a no puede modificar el contenido al que apunta
+ x=2; y=5; // ya que considera ese contenido constante (lo sea o no)
+ cout << x << " " << y << " " << *a << endl;
+ int *const b=&x; //b es un puntero constante a un entero. Al declararlo tiene
+ //que apuntar a algo y no puede apuntar a ningun otro sitio
+ *b=6; //el sitio al que apunta se puede
+ *b=8; //modificar cuantas veces quiera
+//b=&y; //ERROR b no puede apuntar a otro sitio, el puntero es constante
+ *b=7;
+ cout << x << " " << y << " " << *b << endl;
+
+ x=4; y=8;
+ const int * const c=&x; //c es un puntero constante a una constante entera
+//c=&y; //ERROR al declararlo tiene que apuntar a algo y no puede
+ //apuntar a ningun otro sitio
+//*c=6; //ERROR tampoco va a poder modificar el contenido al que
+ //apunta ya que considera ese contenido constante
+ cout << x << " " << y << " " << *c << endl;
+ cout << "------------\n";
+//int &d; //ERROR d es una referencia: hay que indicar a qué referencia
+ int &d=x; //d es una referencia a x (d es un alias de x)
+ d=6; //equivale a poner x=6
+ d=y; //equivale a poner x=y
+ cout << x << " " << y << " " << d << endl;
+ const int &e=x; //e es una referencia a una constante (e es una alias de x)
+//e=8; //ERROR e no puede modificar x porque considera que es constante
+ x=9; //pero x se puede seguir modificando
+ cout << x << " " << y << " " << e << endl;
+}
+```
+Ejemplo: Supongamos una clase que tiene una gran cantidad de datos…
+
+uso habitual(menos eficiente):
+```cpp
+#include <iostream>
+#include <iostream>
+using namespace std;
+class General {
+private:
+int x[1000], n;
+public:
+General(int n, int ini, int inc);
+int getn() const { return n; }
+int getx(int i) const {return x[i];}
+int setx(int i, int v) { x[i]=v; }
+void ver()const {for(int i=0;i<n;i++)
+ cout << x[i] << " ";}
+bool compara(General g) const;
+};
+bool General::compara(General g)const{
+bool v = (n==g.n);
+for (int i=0; v && i<n; i++)
+ v = x[i]==g.x[i];
+return v; //g.n=0 no importa,es copia
+}
+General::General(int n, int ini, int inc) {
+ this->n=n;
+ for(int j=0,i=ini; j<n; i+=inc, j++)
+ x[j]=i;
+}
+General suma(General p1, General p2) {
+int a=p1.getn(), b=p2.getn();
+int n=a<b?a:b;
+General res(n, 0, 0);
+for(int i=0;i<n;i++)
+ res.setx(i, p1.getx(i)+p2.getx(i));
+return res;
+}
+int main(int argc, char *argv[]) {
+General a(5,-4,2), b(3,2,5), c=suma(a,b);
+c = suma(a, b);
+cout << "a: "; a.ver(); cout << endl;
+cout << "b: "; b.ver(); cout << endl;
+cout << "c: "; c.ver(); cout << endl;
+if (!a.compara(b)) cout << "a<>b\n";
+a=b;
+cout << "a: "; a.ver(); cout << endl;
+cout << "b: "; b.ver(); cout << endl;
+if (a.compara(b)) cout << "a = b\n";
+system("PAUSE");
+return EXIT_SUCCESS;
+}
+```
+
+uso de referencias constantes(mas eficiente):
+```cpp
+#include <iostream>
+#include <iostream>
+using namespace std;
+class General {
+private:
+int x[1000], n;
+public:
+General(int n, int ini, int inc);
+int getn() const { return n; }
+int getx(int i) const { return x[i]; }
+int setx(int i, int v) { x[i]=v; }
+void ver() const { for(int i=0; i<n; i++)
+ cout << x[i] << " ";}
+bool compara(const General &g) const;
+};
+bool General::compara(const General &g)const {
+bool v = (n==g.n);
+for (int i=0; v && i<n; i++)
+ v = x[i]==g.x[i];
+return v; //g.n=0 no permitido, es const
+}
+General::General(int n, int ini, int inc) {
+ this->n=n;
+ for(int j=0,i=ini; j<n; i+=inc, j++)
+ x[j]=i;
+}
+General suma(const General &p1, const General &p2){
+int a=p1.getn(), b=p2.getn();
+int n=a<b?a:b;
+General res(n, 0, 0);
+for(int i=0;i<n;i++)
+ res.setx(i, p1.getx(i)+p2.getx(i));
+return res;
+}
+int main(int argc, char *argv[]) {
+General a(5,-4,2), b(3,2,5), c=suma(a,b);
+c = suma(a, b);
+cout << "a: "; a.ver(); cout << endl;
+cout << "b: "; b.ver(); cout << endl;
+cout << "c: "; c.ver(); cout << endl;
+if (!a.compara(b)) cout << "a<>b\n";
+a=b;
+cout << "a: "; a.ver(); cout << endl;
+cout << "b: "; b.ver(); cout << endl;
+if (a.compara(b)) cout << "a = b\n";
+system("PAUSE");
+return EXIT_SUCCESS;
+}
+```
+
+## 5. Sobrecarga de Métodos y Operadores
