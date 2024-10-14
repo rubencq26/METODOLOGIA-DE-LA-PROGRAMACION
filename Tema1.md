@@ -852,3 +852,276 @@ return EXIT_SUCCESS;
 ```
 
 ## 5. Sobrecarga de Métodos y Operadores
+###Sobrecarga de operadores mediante un método (función miembro)
+El primer operando debe ser un objeto de esa clase (constituye el argumento implícito) 
+
+Sintaxis:
+```cpp
+tipo nombre_clase::operator#([tipo operador_derecho]) {
+[declaraciones;]
+sentencias;
+return valor_devuelto;
+}
+```
+**donde # representa el operador a sobrecargar (+, -, *, /, >, <, >=, <=, ==, !=, etc.)**
+
+(operator+, operarator-, operator*, operator/, operator>, operator!=, etc.)
+
+### Sobrecarga del operador de asignación =
+Si el programador no lo sobrecarga, el compilador lo sobrecarga (realizando una copia
+binaria de los atributos)
+
+Sólo se puede sobrecargar mediante un método (función miembro).
+
+Sintaxis: (permite cadenas de asignaciones y máxima eficiencia)
+```cpp
+clase & clase::operator=(const clase& operador_derecho);
+```
+- void operator=(…) permite hacer a=b, pero no encadenar asignaciones a=b=c;
+- clase operator=(…) { … return *this; } permite encadenar asignaciones a=b=c; Devuelve copia del objeto
+ (x=y=z).metodo(); -> x=y=z; copiax.metodo(); (x=y=z)++  x=y=z; copiax++;
+- clase& operator=(…) { … return *this; } permite encadenar asignaciones a=b=c; Devuelve objeto original
+ (x=y=z).metodo(); -> x=y=z; x.metodo(); (x=y=z)++ -> x=y=z; x++;
+- parámetros referencias constantes -> para que cuando escribamos cd=cd se detecte con (this != &cd)
+
+La sobrecarga por defecto que proporciona el compilador hace una copia binaria de los datos:
+```cpp
+clase & clase::operator=(const clase& operador_derecho) {
+*this=operador_derecho; //llamada recursiva ERROR
+if (this != &operador_derecho) { //por si es a=a y no es a=b
+ sentencias_que_hacen_una_copia_binaria;
+}
+ return *this; //con & devuelve el propio objeto implicito
+} //sin & devuelve una copia del objeto implicito
+```
+
+### Sobrecarga del operador += (o del operador -=, operador/=, operador*=)
+Se puede sobrecargar mediante un método o una función no miembro. 
+
+Sintaxis: (permite cadena de += y al ser por referencia máxima eficiencia al no hacer copia)
+```cpp
+clase & clase::operator+=(const clase &operador_derecho);
+clase & operator+=(clase &op_izq, const clase &op_derecho);
+```
+
+Ejemplo Sobrecarga Operator=
+```cpp
+#include <iostream> //cin, cout
+using namespace std;
+class cadena {
+char *s;
+int nchar;
+public:
+cadena(char*); // constructor general
+~cadena() { delete [] s; }
+int getnchar() const { return nchar; }
+const char *gets() const { return s; }
+void sets(char *);
+void ver() const;
+cadena& operator= (const cadena& cd);
+cadena& operator+= (const cadena& cd);
+};
+cadena::cadena(char* c) {
+nchar = strlen(c);
+s = new char[nchar+1];
+strcpy(s, c);
+}
+void cadena::sets(char* c) {
+delete [] s;
+nchar = strlen(c);
+s = new char[nchar+1];
+strcpy(s, c);
+}
+void cadena::ver() const {
+cout << nchar << "," << s << endl;
+}
+
+cadena& cadena::operator=(const cadena& cd){
+if (this != &cd) { //por si es cd=cd
+ nchar = cd.nchar; //para ello cd debe
+ delete [] s; //ser por referencia &
+ s = new char[nchar + 1];
+ strcpy(s, cd.s);
+}
+return *this;
+}
+
+cadena& cadena::operator+=(const cadena& cd){
+char *aux=s;
+nchar += cd.nchar;
+s = new char[nchar + 1];
+strcpy(s, aux);
+strcat(s, cd.s);
+delete [] aux;
+return *this;
+}
+int main() {
+cadena c1("toro");
+cadena c2("cobra");
+cout << "c1:"; c1.ver();
+cout << "c2:"; c2.ver();
+c2=c1;
+cout << "c2:"; c2.ver();
+c1.sets("sentado");
+cout << "c1:"; c1.ver();
+cout << "c2:"; c2.ver();
+c2+=c1;
+cout << "c1:"; c1.ver();
+cout << "c2:"; c2.ver();
+system("PAUSE"); return EXIT_SUCCESS;
+```
+## Sobrecarga del operador []
+Se puede sobrecargar mediante un método o una función no miembro. 
+
+Sintaxis: (al devolver una referencia permite modificar lo que se devuelve)
+```cpp
+tipo1 & clase::operator[](tipo2 i); // miembro
+tipo1 & operator[](const clase &op_izq, tipo2 i); //no miembro
+```
+
+siendo **tipo1** el tipo indexado y tipo2 el índice (puede ser cualquier tipo, lo normal es int)
+y donde & es opcional, dependiendo de si nos interesa o no que devuelva una
+referencia a un objeto tipo1 o que devuelva un objeto tipo1.
+
+Si devuelve una referencia, entonces el operador [ ] podrá utilizarse a la derecha, pero
+también a la izquierda de una asignación, con el peligro que eso conlleva si la clase tiene
+alguna restricción respecto a los valores de sus atributos (véase ejemplo apartado 4.4)
+
+Al devolver una referencia permite modificar lo que se devuelve
+```cpp
+clase x; tipo1 y,z; int i;
+//tipo2 es int
+...
+x[2]=y; //x.operator[](2)=y
+z=x[i];
+
+clase x; tipo1 y,z; char *cad;
+//tipo2 es char *
+...
+x["ana"]=y; //x.operator[]("ana")=y
+z=x[cad];
+```
+Si no queremos permitir que operator[ ] pueda aparecer en la parte izquierda de una
+asignación, haremos que no devuelve una referencia o que la referencia sea const.
+
+Ejemplo: sobrecargar el operador [ ] para poder usarlo en una clase cadena, de forma
+que permita acceder y/modificar los caracteres indexándolos a partir del 1
+
+```cpp
+#include <iostream> //cin, cout
+using namespace std;
+class cadena {
+char *s;
+int nchar;
+public:
+cadena(char*); // constructor general
+~cadena() { delete [] s; }
+int getnchar() const { return nchar; }
+char& operator[](int i);
+const char * gets() const { return s; }
+};
+cadena::cadena(char* c) {
+nchar = strlen(c);
+s = new char[nchar+1];
+strcpy(s, c);
+}
+char& cadena::operator[](int i) {
+if (i <= nchar && i>=1)
+ return s[i-1];
+else {
+ cout << "ERROR\n";
+ system("PAUSE");
+ exit(1); //aborta el programa
+}
+}
+
+int main() {
+cadena cad("casa");
+char h;
+cout << cad.gets() << " tiene " <<
+ cad.getnchar() << " letras\n";
+cad[3] = 'n'; //cad.operator[](3)=’n’;
+cout << "Introduzca una letra: ";
+cin >> cad[2];//cin>>cad.operator[](2);
+cout << cad.gets() << endl;
+cout << "la 1ª letra es " << cad[1] << endl;
+h = cad[4]; //h=cad.operator[](4);
+cout << "la 4ª letra es " << h << endl;
+cad[9] = 'k'; //ERROR 9 excede cad
+system("PAUSE"); return EXIT_SUCCESS;
+}
+```
+### Sobrecarga de los operadores de inserción << y de extracción>>
+Los operadores de **inserción (<<)** y **extracción ( >>)** en los flujos (streams) de E/S **sólo
+se pueden sobrecargar mediante una función no miembro.** 
+
+```cpp
+friend std::istream& operator>>(std::istream& s, clase &o);
+friend std::ostream& operator<<(std::ostream& s, const clase &o);
+```
+
+donde istream es el flujo de entrada y ostream el stream de salida y lo gris es opcional
+Estos flujos funcionan como cintas transportadoras que entran (>>) o salen (<<) del programa. Se recibe
+una referencia al flujo como 1er argumento, se añade o se retira de él la variable que se desee, y se
+devuelve siempre como valor de retorno una referencia al flujo (stream) modificado.
+
+istream y ostream se devuelven por referencia para permitir cadenas de << y de >>
+
+o1 << o2 << o3; o1 >> o2 >> o3;
+
+ambas se suelen declarar amigas de la clase para la que se sobrecarga, para poder
+acceder a su parte privada, aunque no es obligatorio
+
+en **operator<<** el objeto de la clase para la que se sobrecarga se suede pasar por
+referencia (por motivos de eficiencia) **constante** (por seguridad), aunque no es obligatorio.
+
+El C++no tiene instrucciones de E/S, pero si tiene librerías que manejan streams (flujos). La librería <iostream>
+proporciona una serie de clases que permiten la E/S por teclado (istream) como por pantalla (ostream).
+
+El C++ tiene predefinidos los objetos streams cin y cout:
+- **cin** es un objeto de la clase **istream** que se encarga de la entrada por teclado
+- **cout** es un objeto **ostream** que maneja la salida por pantalla.
+- << y >> son operadores que están sobrecargados para las clases de streams
+
+```cpp
+#include <iostream> //cin, cout
+using namespace std;
+class frac {
+int n, d;
+public:
+frac() { n=0; d=1; }
+frac(int x, int y) { n=x; d=y; }
+int getn() const { return n; }
+int getd() const { return d; }
+void set(int n, int d=1);
+friend istream& operator>>(istream& s,
+ frac &p);
+};
+istream& operator>>(istream& s, frac &p) {
+cout << "numerador: ";
+s >> p.n; //s actúa a modo de cin
+do {
+ cout << "denominador: ";
+ s >> p.d; //s actúa a modo de cin
+} while (p.d==0);
+return s;
+}
+
+ostream& operator<<(ostream &s,
+ const frac &p) {
+if (p.getd()>0)
+ s << p.getn() << "/" << p.getd();
+else //s actúa a modo de cout
+ s << -p.getn() << "/" << -p.getd();
+return s;
+}
+int main() {
+frac a(3,2),b;
+cout << a << " , " << b << endl;
+cout << "Introduce 2 fracciones \n";
+cin >> a >> b;
+cout << a << " , " << b << endl;
+system("PAUSE"); return EXIT_SUCCESS;
+}
+
+```
