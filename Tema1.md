@@ -852,7 +852,7 @@ return EXIT_SUCCESS;
 ```
 
 ## 5. Sobrecarga de Métodos y Operadores
-###Sobrecarga de operadores mediante un método (función miembro)
+### Sobrecarga de operadores mediante un método (función miembro)
 El primer operando debe ser un objeto de esa clase (constituye el argumento implícito) 
 
 Sintaxis:
